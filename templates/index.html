@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Artist Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2em;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        #artist-list {
+            margin-top: 1em;
+        }
+        li {
+            margin-bottom: 0.75em;
+        }
+        button {
+            margin-left: 0.5em;
+        }
+        form {
+            margin-top: 2em;
+        }
+        input[type="text"] {
+            padding: 0.4em;
+            width: 250px;
+        }
+        #download-all {
+            margin-top: 2em;
+            padding: 0.6em 1em;
+            font-weight: bold;
+        }
+        .info-box {
+            margin-top: 2em;
+            padding: 1em;
+            background-color: #e8f4fd;
+            border-left: 4px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 Artist Manager</h1>
+
+    <div class="info-box">
+        <p><strong>Download Directory:</strong> {{ download_dir }}</p>
+    </div>
+
+    <ul id="artist-list"></ul>
+
+    <form id="add-form">
+        <input type="text" id="add-name" placeholder="New artist name" required>
+        <button type="submit">Add Artist</button>
+    </form>
+
+    <button id="download-all">⬇️ Download All Now</button>
+
+    <script>
+        async function fetchArtists() {
+            const res = await fetch('/artists');
+            const data = await res.json();
+            const list = document.getElementById('artist-list');
+            list.innerHTML = '';
+            data.forEach(name => {
+                const li = document.createElement('li');
+                li.textContent = name;
+
+                // Remove Button
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = 'Remove';
+                removeBtn.onclick = async () => {
+                    await fetch('/artists', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name })
+                    });
+                    fetchArtists();
+                };
+
+                // Download Now Button
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = 'Download Now';
+                downloadBtn.onclick = async () => {
+                    const res = await fetch('/download', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name })
+                    });
+                    const msg = await res.json();
+                    alert(msg.message || msg.error);
+                };
+
+                li.appendChild(removeBtn);
+                li.appendChild(downloadBtn);
+                list.appendChild(li);
+            });
+        }
+
+        document.getElementById('add-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('add-name').value;
+            if (name.trim()) {
+                await fetch('/artists', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                document.getElementById('add-name').value = '';
+                fetchArtists();
+            }
+        };
+
+        document.getElementById('download-all').onclick = async () => {
+            const res = await fetch('/download', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+            const results = await res.json();
+            let msg = 'Download Results:\n\n';
+            for (const [artist, result] of Object.entries(results)) {
+                msg += `${artist}: ${result}\n`;
+            }
+            alert(msg);
+        };
+
+        fetchArtists();
+    </script>
+</body>
+</html>
