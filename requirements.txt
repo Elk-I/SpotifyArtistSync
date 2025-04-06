@@ -1,0 +1,4 @@
+flask
+spotipy
+apscheduler
+spotdl

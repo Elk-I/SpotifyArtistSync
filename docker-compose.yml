@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  spotify-downloader:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      # You can change this path to any location on your host machine
+      - ${DOWNLOAD_DIR:-./downloads}:/music_downloads
+      - ./data:/app/data
+    environment:
+      - FLASK_ENV=production
+      - SPOTIFY_CLIENT_ID=a411e45c65ee4ef0810647fc57d5fbdd
+      - SPOTIFY_CLIENT_SECRET=4635e21cf91d4b318f39a7dd1a2a638e
+      # Set the download directory path inside the container
+      - DOWNLOAD_LOCATION=/music_downloads
+    restart: unless-stopped
